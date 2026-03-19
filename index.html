@@ -1,308 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced RLC Circuit Simulator</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-*{box-sizing:border-box}
-
-body{
-  font-family:'Segoe UI',sans-serif;
-  background:linear-gradient(135deg,#1e3c72,#2a5298);
-  color:white;
-  margin:0;
-  overflow-x:hidden;
-}
-
-.container{
-  max-width:1200px;
-  width:min(1200px, calc(100vw - 40px));
-  margin:auto;
-  padding:20px;
-}
-
-.top{
-  display:grid;
-  grid-template-columns:2fr 1fr;
-  gap:15px;
-  margin-bottom:15px;
-}
-
-.controls{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-}
-
-.card{
-  background:rgba(255,255,255,0.12);
-  padding:10px;
-  border-radius:10px;
-  min-width:0;
-}
-
-.minmax{
-  display:flex;
-  gap:12px;
-  margin-bottom:8px;
-}
-
-.minmax div{
-  flex:1;
-  font-size:12px;
-}
-
-input{
-  width:100%;
-  border-radius:6px;
-  border:none;
-  padding:4px;
-}
-
-.dashboard{
-  background:rgba(0,0,0,0.35);
-  padding:10px;
-  border-radius:10px;
-  font-size:14px;
-}
-
-.layout{
-  display:grid;
-  grid-template-columns:400px minmax(0,1fr);
-  gap:20px;
-  align-items:start;
-}
-
-.plot-card{
-  background:rgba(255,255,255,0.92);
-  border-radius:12px;
-  padding:8px;
-  overflow:hidden;
-  min-width:0;
-}
-
-#phasor{
-  display:block;
-  width:100%;
-  height:auto;
-  max-width:400px;
-  background:white;
-  border-radius:10px;
-}
-
-.wave-holder{
-  width:100%;
-  height:390px;
-  min-width:0;
-}
-
-#wave{
-  display:block;
-  width:100% !important;
-  height:100% !important;
-  background:white;
-  border-radius:10px;
-}
-
-footer{
-  text-align:center;
-  margin-top:10px;
-}
-
-@media (max-width: 900px){
-  .top,
-  .layout{
-    grid-template-columns:1fr;
-  }
-
-  .controls{
-    grid-template-columns:1fr;
-  }
-
-  #phasor{
-    max-width:100%;
-  }
-}
-</style>
-</head>
-<body>
-<div class="container">
-  <h2 style="text-align:center">RLC Circuit Simulator</h2>
-
-  <div class="top">
-    <div class="controls">
-
-      <div class="card">
-        <div class="minmax">
-          <div>R min<input type="number" id="Rmin" value="1"></div>
-          <div>R max<input type="number" id="Rmax" value="500"></div>
-        </div>
-        <input type="range" id="R" min="1" max="500" value="100">
-      </div>
-
-      <div class="card">
-        <div class="minmax">
-          <div>L min<input type="number" id="Lmin" value="0"></div>
-          <div>L max<input type="number" id="Lmax" value="2"></div>
-        </div>
-        <input type="range" id="L" min="0" max="2" step="0.01" value="0.5">
-      </div>
-
-      <div class="card">
-        <div class="minmax">
-          <div>C min<input type="number" id="Cmin" value="0.00001"></div>
-          <div>C max<input type="number" id="Cmax" value="0.01"></div>
-        </div>
-        <input type="range" id="C" min="0.00001" max="0.01" step="0.0001" value="0.001">
-      </div>
-
-      <div class="card">
-        <div class="minmax">
-          <div>f min<input type="number" id="fmin" value="0"></div>
-          <div>f max<input type="number" id="fmax" value="200"></div>
-        </div>
-        <input type="range" id="f" min="0" max="200" value="50">
-      </div>
-
-    </div>
-    <div class="dashboard" id="dashboard"></div>
-  </div>
-
-  <div class="layout">
-    <div class="plot-card">
-      <canvas id="phasor" width="400" height="400"></canvas>
-    </div>
-
-    <div class="plot-card">
-      <div class="wave-holder">
-        <canvas id="wave"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <footer>Upgraded UI Version</footer>
-</div>
-
-<script>
-const waveCanvas = document.getElementById('wave');
-const waveCtx = waveCanvas.getContext('2d');
-const phasorCanvas = document.getElementById('phasor');
-const pctx = phasorCanvas.getContext('2d');
-let chart;
-
-function drawPhasor(phi, R, XL, XC, Z){
-  const w = phasorCanvas.width;
-  const h = phasorCanvas.height;
-  const cx = w/2, cy = h/2;
-  const scale = 120/Math.max(Z,1);
-
-  pctx.clearRect(0,0,w,h);
-
-  pctx.strokeStyle = "#aaa";
-  pctx.beginPath(); pctx.moveTo(0,cy); pctx.lineTo(w,cy); pctx.stroke();
-  pctx.beginPath(); pctx.moveTo(cx,0); pctx.lineTo(cx,h); pctx.stroke();
-
-  pctx.fillStyle = "black";
-  pctx.fillText("Re",w-20,cy-5);
-  pctx.fillText("Im",cx+5,10);
-
-  const x = R*scale;
-  const y = (XL-XC)*scale;
-
-  pctx.strokeStyle = "green";
-  pctx.beginPath();
-  pctx.moveTo(cx,cy);
-  pctx.lineTo(cx+x,cy);
-  pctx.lineTo(cx+x,cy-y);
-  pctx.closePath();
-  pctx.stroke();
-
-  pctx.strokeStyle = "blue";
-  pctx.beginPath();
-  pctx.moveTo(cx,cy);
-  pctx.lineTo(cx+120,cy);
-  pctx.stroke();
-
-  pctx.strokeStyle = "red";
-  pctx.beginPath();
-  pctx.moveTo(cx,cy);
-  pctx.lineTo(cx+120*Math.cos(phi), cy-120*Math.sin(phi));
-  pctx.stroke();
-}
-
-function update(){
-  Rmin.value = Math.max(+Rmin.value, 0.0001);
-  Cmin.value = Math.max(+Cmin.value, 0.0000001);
-  Lmin.value = Math.max(+Lmin.value, 0);
-  fmin.value = Math.max(+fmin.value, 0);
-
-  Rmax.value = Math.max(+Rmax.value, +Rmin.value);
-  Lmax.value = Math.max(+Lmax.value, +Lmin.value);
-  Cmax.value = Math.max(+Cmax.value, +Cmin.value);
-  fmax.value = Math.max(+fmax.value, +fmin.value);
-
-  Rslider.min = Rmin.value;
-  Rslider.max = Rmax.value;
-  Lslider.min = Lmin.value;
-  Lslider.max = Lmax.value;
-  Cslider.min = Cmin.value;
-  Cslider.max = Cmax.value;
-  fslider.min = fmin.value;
-  fslider.max = fmax.value;
-
-  const R = Math.max(+Rslider.value, 0.0001);
-  const L = Math.max(+Lslider.value, 0);
-  const C = Math.max(+Cslider.value, 0.0000001);
-  const f = Math.max(+fslider.value, 0);
-
-  const w = 2*Math.PI*f;
-  const XL = (f===0) ? 0 : w*L;
-  const XC = (f===0) ? Infinity : 1/(w*C);
-
-  const Z = (f===0) ? R : Math.sqrt(R*R + (XL-XC)*(XL-XC));
-  const Iamp = (f===0) ? (1/R) : 1/Z;
-  const phi = (f===0) ? 0 : Math.atan((XL-XC)/R);
-
-  const t = [], V = [], I = [];
-  for(let i=0;i<1000;i++){
-    const time = i*0.002;
-    t.push(time.toFixed(2));
-
-    if(f===0){
-      V.push(1);
-      I.push(1/R);
-    } else {
-      V.push(Math.sin(w*time));
-      I.push(Iamp*Math.sin(w*time-phi));
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to RLC Circuit Simulator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box
     }
-  }
 
-  if(chart) chart.destroy();
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      margin: 0;
+      overflow-x: hidden;
+    }
 
-  chart = new Chart(waveCtx,{
-    type:'line',
-    data:{
-      labels:t,
-      datasets:[
-        {label:'Voltage', data:V, borderWidth:2, pointRadius:0},
-        {label:'Current', data:I, borderWidth:2, pointRadius:0}
-      ]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      animation:false,
-      plugins:{
-        legend:{display:true}
+    .container {
+      max-width: 1200px;
+      width: min(1200px, calc(100vw - 40px));
+      margin: auto;
+      padding: 20px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.12);
+      padding: 10px;
+      border-radius: 10px;
+      min-width: 0;
+    }
+
+    .minmax {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .minmax div {
+      flex: 1;
+      font-size: 12px;
+    }
+
+    input {
+      width: 100%;
+      border-radius: 6px;
+      border: none;
+      padding: 4px;
+    }
+
+    .dashboard {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 400px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .plot-card {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 12px;
+      padding: 8px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    #phasor {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 400px;
+      background: white;
+      border-radius: 10px;
+    }
+
+    .wave-holder {
+      width: 100%;
+      height: 390px;
+      min-width: 0;
+    }
+
+    #wave {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      background: white;
+      border-radius: 10px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 900px) {
+
+      .top,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      #phasor {
+        max-width: 100%;
       }
     }
-  });
+  </style>
+</head>
 
-  drawPhasor(phi,R,XL,XC,Z);
+<body>
+  <div class="container">
+    <h2 style="text-align:center">RLC Circuit Simulator</h2>
 
-  dashboard.innerHTML = `
+    <div class="top">
+      <div class="controls">
+
+        <div class="card">
+          <div class="minmax">
+            <div>R min<input type="number" id="Rmin" value="1"></div>
+            <div>R max<input type="number" id="Rmax" value="500"></div>
+          </div>
+          <input type="range" id="R" min="1" max="500" value="100">
+        </div>
+
+        <div class="card">
+          <div class="minmax">
+            <div>L min<input type="number" id="Lmin" value="0"></div>
+            <div>L max<input type="number" id="Lmax" value="2"></div>
+          </div>
+          <input type="range" id="L" min="0" max="2" step="0.01" value="0.5">
+        </div>
+
+        <div class="card">
+          <div class="minmax">
+            <div>C min<input type="number" id="Cmin" value="0.00001"></div>
+            <div>C max<input type="number" id="Cmax" value="0.01"></div>
+          </div>
+          <input type="range" id="C" min="0.00001" max="0.01" step="0.0001" value="0.001">
+        </div>
+
+        <div class="card">
+          <div class="minmax">
+            <div>f min<input type="number" id="fmin" value="0"></div>
+            <div>f max<input type="number" id="fmax" value="200"></div>
+          </div>
+          <input type="range" id="f" min="0" max="200" value="50">
+        </div>
+
+      </div>
+      <div class="dashboard" id="dashboard"></div>
+    </div>
+
+    <div class="layout">
+      <div class="plot-card">
+        <canvas id="phasor" width="400" height="400"></canvas>
+      </div>
+
+      <div class="plot-card">
+        <div class="wave-holder">
+          <canvas id="wave"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <footer>Authored by: Ashutosh Rana</footer>
+  </div>
+
+  <script>
+    const waveCanvas = document.getElementById('wave');
+    const waveCtx = waveCanvas.getContext('2d');
+    const phasorCanvas = document.getElementById('phasor');
+    const pctx = phasorCanvas.getContext('2d');
+    let chart;
+
+    function drawPhasor(phi, R, XL, XC, Z) {
+      const w = phasorCanvas.width;
+      const h = phasorCanvas.height;
+      const cx = w / 2, cy = h / 2;
+      const scale = 120 / Math.max(Z, 1);
+
+      pctx.clearRect(0, 0, w, h);
+
+      pctx.strokeStyle = "#aaa";
+      pctx.beginPath(); pctx.moveTo(0, cy); pctx.lineTo(w, cy); pctx.stroke();
+      pctx.beginPath(); pctx.moveTo(cx, 0); pctx.lineTo(cx, h); pctx.stroke();
+
+      pctx.fillStyle = "black";
+      pctx.fillText("Re", w - 20, cy - 5);
+      pctx.fillText("Im", cx + 5, 10);
+
+      const x = R * scale;
+      const y = (XL - XC) * scale;
+
+      pctx.strokeStyle = "green";
+      pctx.beginPath();
+      pctx.moveTo(cx, cy);
+      pctx.lineTo(cx + x, cy);
+      pctx.lineTo(cx + x, cy - y);
+      pctx.closePath();
+      pctx.stroke();
+
+      pctx.strokeStyle = "blue";
+      pctx.beginPath();
+      pctx.moveTo(cx, cy);
+      pctx.lineTo(cx + 120, cy);
+      pctx.stroke();
+
+      pctx.strokeStyle = "red";
+      pctx.beginPath();
+      pctx.moveTo(cx, cy);
+      pctx.lineTo(cx + 120 * Math.cos(phi), cy - 120 * Math.sin(phi));
+      pctx.stroke();
+    }
+
+    function update() {
+      Rmin.value = Math.max(+Rmin.value, 0.0001);
+      Cmin.value = Math.max(+Cmin.value, 0.0000001);
+      Lmin.value = Math.max(+Lmin.value, 0);
+      fmin.value = Math.max(+fmin.value, 0);
+
+      Rmax.value = Math.max(+Rmax.value, +Rmin.value);
+      Lmax.value = Math.max(+Lmax.value, +Lmin.value);
+      Cmax.value = Math.max(+Cmax.value, +Cmin.value);
+      fmax.value = Math.max(+fmax.value, +fmin.value);
+
+      Rslider.min = Rmin.value;
+      Rslider.max = Rmax.value;
+      Lslider.min = Lmin.value;
+      Lslider.max = Lmax.value;
+      Cslider.min = Cmin.value;
+      Cslider.max = Cmax.value;
+      fslider.min = fmin.value;
+      fslider.max = fmax.value;
+
+      const R = Math.max(+Rslider.value, 0.0001);
+      const L = Math.max(+Lslider.value, 0);
+      const C = Math.max(+Cslider.value, 0.0000001);
+      const f = Math.max(+fslider.value, 0);
+
+      const w = 2 * Math.PI * f;
+      const XL = (f === 0) ? 0 : w * L;
+      const XC = (f === 0) ? Infinity : 1 / (w * C);
+
+      const Z = (f === 0) ? R : Math.sqrt(R * R + (XL - XC) * (XL - XC));
+      const Iamp = (f === 0) ? (1 / R) : 1 / Z;
+      const phi = (f === 0) ? 0 : Math.atan((XL - XC) / R);
+
+      const t = [], V = [], I = [];
+      for (let i = 0; i < 1000; i++) {
+        const time = i * 0.002;
+        t.push(time.toFixed(2));
+
+        if (f === 0) {
+          V.push(1);
+          I.push(1 / R);
+        } else {
+          V.push(Math.sin(w * time));
+          I.push(Iamp * Math.sin(w * time - phi));
+        }
+      }
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(waveCtx, {
+        type: 'line',
+        data: {
+          labels: t,
+          datasets: [
+            { label: 'Voltage', data: V, borderWidth: 2, pointRadius: 0 },
+            { label: 'Current', data: I, borderWidth: 2, pointRadius: 0 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: {
+            legend: { display: true }
+          }
+        }
+      });
+
+      drawPhasor(phi, R, XL, XC, Z);
+
+      dashboard.innerHTML = `
     <b>R:</b> ${R.toFixed(2)} Ω<br>
     <b>L:</b> ${L.toFixed(3)} H<br>
     <b>C:</b> ${C.toFixed(5)} F<br>
@@ -310,28 +315,29 @@ function update(){
     <b>XL:</b> ${XL === Infinity ? '∞' : XL.toFixed(2)} Ω<br>
     <b>XC:</b> ${XC === Infinity ? '∞' : XC.toFixed(2)} Ω<br>
     <b>Z:</b> ${Z.toFixed(2)} Ω<br>
-    <b>Phase:</b> ${(phi*180/Math.PI).toFixed(2)}°
+    <b>Phase:</b> ${(phi * 180 / Math.PI).toFixed(2)}°
   `;
-}
+    }
 
-const Rslider = document.getElementById('R');
-const Lslider = document.getElementById('L');
-const Cslider = document.getElementById('C');
-const fslider = document.getElementById('f');
-const Rmin = document.getElementById('Rmin');
-const Rmax = document.getElementById('Rmax');
-const Lmin = document.getElementById('Lmin');
-const Lmax = document.getElementById('Lmax');
-const Cmin = document.getElementById('Cmin');
-const Cmax = document.getElementById('Cmax');
-const fmin = document.getElementById('fmin');
-const fmax = document.getElementById('fmax');
-const dashboard = document.getElementById('dashboard');
+    const Rslider = document.getElementById('R');
+    const Lslider = document.getElementById('L');
+    const Cslider = document.getElementById('C');
+    const fslider = document.getElementById('f');
+    const Rmin = document.getElementById('Rmin');
+    const Rmax = document.getElementById('Rmax');
+    const Lmin = document.getElementById('Lmin');
+    const Lmax = document.getElementById('Lmax');
+    const Cmin = document.getElementById('Cmin');
+    const Cmax = document.getElementById('Cmax');
+    const fmin = document.getElementById('fmin');
+    const fmax = document.getElementById('fmax');
+    const dashboard = document.getElementById('dashboard');
 
-[Rslider,Lslider,Cslider,fslider,Rmin,Rmax,Lmin,Lmax,Cmin,Cmax,fmin,fmax]
-.forEach(el => el.addEventListener('input', update));
+    [Rslider, Lslider, Cslider, fslider, Rmin, Rmax, Lmin, Lmax, Cmin, Cmax, fmin, fmax]
+      .forEach(el => el.addEventListener('input', update));
 
-update();
-</script>
+    update();
+  </script>
 </body>
+
 </html>
