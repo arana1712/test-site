@@ -1,783 +1,822 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Enhanced RLC Circuit Simulator</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-:root{
-  --bg1:#16356f;
-  --bg2:#234f9a;
-  --card:rgba(255,255,255,0.12);
-  --card-strong:rgba(8,22,54,0.40);
-  --ink:#eef4ff;
-  --muted:#bfd0f5;
-  --accent:#78c4ff;
-  --accent2:#9de0c7;
-  --edge:rgba(255,255,255,0.14);
-  --shadow:0 18px 36px rgba(0,0,0,0.22);
-}
-
-*{box-sizing:border-box}
-
-html,body{margin:0;padding:0}
-
-body{
-  font-family:"Segoe UI",system-ui,sans-serif;
-  color:var(--ink);
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,0.10), transparent 26%),
-    radial-gradient(circle at bottom right, rgba(255,255,255,0.06), transparent 24%),
-    linear-gradient(135deg,var(--bg1),var(--bg2));
-  min-height:100vh;
-  overflow-x:hidden;
-}
-
-.container{
-  width:min(1280px, calc(100vw - 32px));
-  margin:0 auto;
-  padding:22px 0 28px;
-}
-
-.hero{
-  margin-bottom:18px;
-  padding:18px 22px;
-  border:1px solid var(--edge);
-  border-radius:22px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
-  backdrop-filter: blur(6px);
-  box-shadow:var(--shadow);
-}
-
-.hero-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:16px;
-  flex-wrap:wrap;
-}
-
-h1{
-  margin:0 0 6px;
-  font-size:clamp(28px,3vw,42px);
-  line-height:1.1;
-}
-
-.subtitle{
-  margin:0;
-  color:var(--muted);
-  max-width:760px;
-  line-height:1.5;
-}
-
-.pill-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-top:14px;
-}
-
-.pill{
-  padding:8px 12px;
-  border-radius:999px;
-  border:1px solid var(--edge);
-  background:rgba(255,255,255,0.08);
-  color:var(--ink);
-  font-size:13px;
-}
-
-.main-grid{
-  display:grid;
-  grid-template-columns:minmax(360px, 430px) minmax(0,1fr);
-  gap:18px;
-  align-items:start;
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--edge);
-  border-radius:20px;
-  box-shadow:var(--shadow);
-  backdrop-filter: blur(6px);
-}
-
-.controls-panel{
-  padding:16px;
-}
-
-.section-title{
-  margin:0 0 12px;
-  font-size:18px;
-  font-weight:700;
-}
-
-.controls-grid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:12px;
-}
-
-.control-card{
-  background:rgba(255,255,255,0.10);
-  border:1px solid rgba(255,255,255,0.10);
-  border-radius:16px;
-  padding:12px;
-}
-
-.control-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.control-name{
-  font-weight:700;
-  letter-spacing:0.2px;
-}
-
-.value-badge{
-  padding:6px 10px;
-  border-radius:999px;
-  background:rgba(0,0,0,0.22);
-  font-size:13px;
-  white-space:nowrap;
-}
-
-.minmax{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.minmax label{
-  display:block;
-  font-size:12px;
-  color:var(--muted);
-}
-
-input[type="number"]{
-  margin-top:5px;
-  width:100%;
-  border:none;
-  border-radius:10px;
-  padding:10px 12px;
-  background:rgba(255,255,255,0.92);
-  color:#162646;
-  font-size:14px;
-}
-
-input[type="range"]{
-  width:100%;
-  accent-color:#4db6ff;
-  cursor:pointer;
-}
-
-.quick-actions{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-top:14px;
-}
-
-button{
-  border:none;
-  border-radius:12px;
-  padding:11px 12px;
-  cursor:pointer;
-  font-weight:700;
-  transition:transform .15s ease, opacity .15s ease, box-shadow .15s ease;
-}
-
-button:hover{transform:translateY(-1px)}
-button:active{transform:translateY(0)}
-
-.btn-primary{
-  color:#0f2546;
-  background:linear-gradient(180deg,#b5e2ff,#7dc7ff);
-}
-
-.btn-secondary{
-  color:#eff6ff;
-  background:rgba(255,255,255,0.10);
-  border:1px solid rgba(255,255,255,0.12);
-}
-
-.right-col{
-  display:grid;
-  gap:18px;
-}
-
-.metrics-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-}
-
-.metric{
-  padding:14px;
-  border-radius:18px;
-  background:var(--card);
-  border:1px solid var(--edge);
-  box-shadow:var(--shadow);
-}
-
-.metric-label{
-  color:var(--muted);
-  font-size:12px;
-  margin-bottom:8px;
-  letter-spacing:.25px;
-  text-transform:uppercase;
-}
-
-.metric-value{
-  font-size:26px;
-  font-weight:800;
-  line-height:1.05;
-}
-
-.metric-sub{
-  margin-top:6px;
-  font-size:13px;
-  color:var(--muted);
-}
-
-.plot-grid{
-  display:grid;
-  grid-template-columns:360px minmax(0,1fr);
-  gap:18px;
-}
-
-.plot-card{
-  padding:14px;
-}
-
-.plot-title{
-  margin:0 0 10px;
-  font-size:17px;
-  font-weight:700;
-}
-
-.plot-note{
-  margin:0 0 12px;
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.45;
-}
-
-.canvas-shell{
-  border-radius:16px;
-  overflow:hidden;
-  background:rgba(255,255,255,0.92);
-  padding:10px;
-  min-width:0;
-}
-
-#phasor{
-  display:block;
-  width:100%;
-  height:auto;
-  max-width:340px;
-  background:#fff;
-  border-radius:12px;
-}
-
-.wave-wrap{
-  width:100%;
-  height:390px;
-  min-width:0;
-}
-
-#wave{
-  display:block;
-  width:100% !important;
-  height:100% !important;
-  background:#fff;
-  border-radius:12px;
-}
-
-.explain{
-  padding:16px;
-  line-height:1.55;
-}
-
-.explain-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
-  margin-top:12px;
-}
-
-.info-chip{
-  padding:12px;
-  border-radius:14px;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.10);
-}
-
-.info-chip b{
-  display:block;
-  margin-bottom:5px;
-}
-
-footer{
-  text-align:center;
-  color:var(--muted);
-  margin-top:18px;
-  font-size:14px;
-}
-
-@media (max-width: 1120px){
-  .metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .plot-grid{grid-template-columns:1fr}
-  #phasor{max-width:100%}
-}
-
-@media (max-width: 900px){
-  .main-grid{grid-template-columns:1fr}
-}
-
-@media (max-width: 640px){
-  .quick-actions{grid-template-columns:1fr}
-  .metrics-grid{grid-template-columns:1fr}
-  .explain-grid{grid-template-columns:1fr}
-  .container{width:min(100vw - 20px, 1280px)}
-}
-</style>
-</head>
-<body>
-<div class="container">
-  <section class="hero">
-    <div class="hero-top">
-      <div>
-        <h1>RLC Circuit Simulator</h1>
-        <p class="subtitle">
-          Explore how resistance, inductance, capacitance, and frequency affect impedance, phase shift, resonance, and the relationship between voltage and current.
-        </p>
-        <div class="pill-row">
-          <div class="pill">Interactive controls</div>
-          <div class="pill">Phasor view</div>
-          <div class="pill">Waveform view</div>
-          <div class="pill">Resonance insights</div>
-        </div>
-      </div>
-      <div class="pill">Series RLC • AC analysis</div>
-    </div>
-  </section>
-
-  <section class="main-grid">
-    <aside class="card controls-panel">
-      <h2 class="section-title">Circuit Controls</h2>
-      <div class="controls-grid">
-
-        <div class="control-card">
-          <div class="control-head">
-            <div class="control-name">Resistance (R)</div>
-            <div class="value-badge" id="RValue">100.00 Ω</div>
-          </div>
-          <div class="minmax">
-            <label>R min<input type="number" id="Rmin" value="1" step="0.1"></label>
-            <label>R max<input type="number" id="Rmax" value="500" step="0.1"></label>
-          </div>
-          <input type="range" id="R" min="1" max="500" value="100" step="0.1">
-        </div>
-
-        <div class="control-card">
-          <div class="control-head">
-            <div class="control-name">Inductance (L)</div>
-            <div class="value-badge" id="LValue">0.500 H</div>
-          </div>
-          <div class="minmax">
-            <label>L min<input type="number" id="Lmin" value="0" step="0.01"></label>
-            <label>L max<input type="number" id="Lmax" value="2" step="0.01"></label>
-          </div>
-          <input type="range" id="L" min="0" max="2" value="0.5" step="0.01">
-        </div>
-
-        <div class="control-card">
-          <div class="control-head">
-            <div class="control-name">Capacitance (C)</div>
-            <div class="value-badge" id="CValue">0.00101 F</div>
-          </div>
-          <div class="minmax">
-            <label>C min<input type="number" id="Cmin" value="0.00001" step="0.00001"></label>
-            <label>C max<input type="number" id="Cmax" value="0.01" step="0.00001"></label>
-          </div>
-          <input type="range" id="C" min="0.00001" max="0.01" value="0.00101" step="0.00001">
-        </div>
-
-        <div class="control-card">
-          <div class="control-head">
-            <div class="control-name">Frequency (f)</div>
-            <div class="value-badge" id="fValue">50.00 Hz</div>
-          </div>
-          <div class="minmax">
-            <label>f min<input type="number" id="fmin" value="0" step="1"></label>
-            <label>f max<input type="number" id="fmax" value="200" step="1"></label>
-          </div>
-          <input type="range" id="f" min="0" max="200" value="50" step="1">
-        </div>
-      </div>
-
-      <div class="quick-actions">
-        <button class="btn-primary" id="presetResonance">Set Near Resonance</button>
-        <button class="btn-secondary" id="presetLowFreq">Low Frequency</button>
-        <button class="btn-secondary" id="resetAll">Reset Defaults</button>
-      </div>
-    </aside>
-
-    <div class="right-col">
-      <section class="metrics-grid">
-        <div class="metric">
-          <div class="metric-label">Impedance</div>
-          <div class="metric-value" id="ZValue">183.56 Ω</div>
-          <div class="metric-sub">Overall opposition to AC</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Phase Shift</div>
-          <div class="metric-value" id="PhaseValue">56.99°</div>
-          <div class="metric-sub" id="PhaseText">Current lags voltage</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Resonant Frequency</div>
-          <div class="metric-value" id="f0Value">7.09 Hz</div>
-          <div class="metric-sub">Where XL = XC</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Power Factor</div>
-          <div class="metric-value" id="pfValue">0.545</div>
-          <div class="metric-sub" id="ModeText">Inductive region</div>
-        </div>
-      </section>
-
-      <section class="plot-grid">
-        <div class="card plot-card">
-          <h3 class="plot-title">Phasor Diagram</h3>
-          <p class="plot-note">Blue: resistive axis, green: reactance triangle, red: impedance phasor.</p>
-          <div class="canvas-shell">
-            <canvas id="phasor" width="340" height="340"></canvas>
-          </div>
-        </div>
-
-        <div class="card plot-card">
-          <h3 class="plot-title">Voltage and Current Waves</h3>
-          <p class="plot-note">Observe the lead or lag between voltage and current as you change component values and frequency.</p>
-          <div class="canvas-shell">
-            <div class="wave-wrap">
-              <canvas id="wave"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card explain">
-        <h3 class="plot-title">What this simulator shows</h3>
-        <div id="summaryText">
-          Increase inductance or frequency to raise inductive reactance. Increase capacitance or lower frequency to strengthen capacitive behavior.
-        </div>
-        <div class="explain-grid">
-          <div class="info-chip"><b>Inductive</b><span>XL > XC, so current lags voltage.</span></div>
-          <div class="info-chip"><b>Resonance</b><span>XL = XC, so impedance is minimum and phase shift is near zero.</span></div>
-          <div class="info-chip"><b>Capacitive</b><span>XC > XL, so current leads voltage.</span></div>
-        </div>
-      </section>
-    </div>
-  </section>
-
-  <footer>Authored By: abcd xywz</footer>
-</div>
-
-<script>
-const waveCtx = document.getElementById('wave').getContext('2d');
-const phasorCanvas = document.getElementById('phasor');
-const pctx = phasorCanvas.getContext('2d');
-let chart;
-
-const els = {
-  Rslider: document.getElementById('R'),
-  Lslider: document.getElementById('L'),
-  Cslider: document.getElementById('C'),
-  fslider: document.getElementById('f'),
-  Rmin: document.getElementById('Rmin'),
-  Rmax: document.getElementById('Rmax'),
-  Lmin: document.getElementById('Lmin'),
-  Lmax: document.getElementById('Lmax'),
-  Cmin: document.getElementById('Cmin'),
-  Cmax: document.getElementById('Cmax'),
-  fmin: document.getElementById('fmin'),
-  fmax: document.getElementById('fmax'),
-  RValue: document.getElementById('RValue'),
-  LValue: document.getElementById('LValue'),
-  CValue: document.getElementById('CValue'),
-  fValue: document.getElementById('fValue'),
-  ZValue: document.getElementById('ZValue'),
-  PhaseValue: document.getElementById('PhaseValue'),
-  PhaseText: document.getElementById('PhaseText'),
-  f0Value: document.getElementById('f0Value'),
-  pfValue: document.getElementById('pfValue'),
-  ModeText: document.getElementById('ModeText'),
-  summaryText: document.getElementById('summaryText'),
-  presetResonance: document.getElementById('presetResonance'),
-  presetLowFreq: document.getElementById('presetLowFreq'),
-  resetAll: document.getElementById('resetAll')
-};
-
-function clampSlider(slider, minInput, maxInput, floorValue){
-  minInput.value = Math.max(+minInput.value, floorValue);
-  maxInput.value = Math.max(+maxInput.value, +minInput.value);
-  slider.min = minInput.value;
-  slider.max = maxInput.value;
-  if(+slider.value < +slider.min) slider.value = slider.min;
-  if(+slider.value > +slider.max) slider.value = slider.max;
-}
-
-function nice(value, digits=2){
-  if(!isFinite(value)) return "∞";
-  return Number(value).toFixed(digits);
-}
-
-function drawArrow(x1,y1,x2,y2,color,width=3){
-  const headLength = 10;
-  const angle = Math.atan2(y2-y1, x2-x1);
-
-  pctx.strokeStyle = color;
-  pctx.lineWidth = width;
-  pctx.beginPath();
-  pctx.moveTo(x1,y1);
-  pctx.lineTo(x2,y2);
-  pctx.stroke();
-
-  pctx.beginPath();
-  pctx.moveTo(x2,y2);
-  pctx.lineTo(x2 - headLength*Math.cos(angle - Math.PI/6), y2 - headLength*Math.sin(angle - Math.PI/6));
-  pctx.lineTo(x2 - headLength*Math.cos(angle + Math.PI/6), y2 - headLength*Math.sin(angle + Math.PI/6));
-  pctx.closePath();
-  pctx.fillStyle = color;
-  pctx.fill();
-}
-
-function drawPhasor(phi, R, XL, XC, Z){
-  const w = phasorCanvas.width;
-  const h = phasorCanvas.height;
-  const cx = w/2, cy = h/2;
-  const reactance = XL - XC;
-  const maxMagnitude = Math.max(Math.abs(R), Math.abs(reactance), Z, 1);
-  const scale = 105 / maxMagnitude;
-
-  pctx.clearRect(0,0,w,h);
-
-  pctx.fillStyle = "#ffffff";
-  pctx.fillRect(0,0,w,h);
-
-  pctx.strokeStyle = "#d7deeb";
-  pctx.lineWidth = 1;
-  for(let i=40;i<w;i+=40){
-    pctx.beginPath(); pctx.moveTo(i,0); pctx.lineTo(i,h); pctx.stroke();
-  }
-  for(let i=40;i<h;i+=40){
-    pctx.beginPath(); pctx.moveTo(0,i); pctx.lineTo(w,i); pctx.stroke();
-  }
-
-  pctx.strokeStyle = "#8b95a7";
-  pctx.lineWidth = 1.2;
-  pctx.beginPath(); pctx.moveTo(0,cy); pctx.lineTo(w,cy); pctx.stroke();
-  pctx.beginPath(); pctx.moveTo(cx,0); pctx.lineTo(cx,h); pctx.stroke();
-
-  pctx.fillStyle = "#23304f";
-  pctx.font = "12px Segoe UI";
-  pctx.fillText("Re", w-24, cy-8);
-  pctx.fillText("Im", cx+8, 16);
-
-  const x = R*scale;
-  const y = reactance*scale;
-
-  drawArrow(cx, cy, cx + x, cy, "#2563eb", 3);
-  drawArrow(cx + x, cy, cx + x, cy - y, "#16a34a", 3);
-  drawArrow(cx, cy, cx + x, cy - y, "#dc2626", 3);
-
-  pctx.fillStyle = "#1f2b45";
-  pctx.fillText("R", cx + x/2 + 4, cy - 8);
-  pctx.fillText(reactance >= 0 ? "XL-XC" : "XC-XL", cx + x + 6, cy - y/2);
-  pctx.fillText("Z", cx + x/2 + 8, cy - y/2 - 6);
-
-  pctx.strokeStyle = "#6b7280";
-  pctx.setLineDash([5,5]);
-  pctx.beginPath();
-  pctx.moveTo(cx + x, cy - y);
-  pctx.lineTo(cx + x, cy);
-  pctx.stroke();
-  pctx.setLineDash([]);
-}
-
-function createWaveChart(labels, voltage, current){
-  return new Chart(waveCtx,{
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {
-          label:'Voltage',
-          data:voltage,
-          borderColor:'#2f9cff',
-          borderWidth:2.2,
-          pointRadius:0,
-          tension:0,
-        },
-        {
-          label:'Current',
-          data:current,
-          borderColor:'#ff5f8a',
-          borderWidth:2.2,
-          pointRadius:0,
-          tension:0,
-        }
-      ]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      animation:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{
-          labels:{usePointStyle:true, boxWidth:10}
-        },
-        tooltip:{enabled:true}
-      },
-      scales:{
-        x:{
-          ticks:{maxTicksLimit:12},
-          grid:{color:'rgba(0,0,0,0.06)'},
-          title:{display:true,text:'Time (s)'}
-        },
-        y:{
-          suggestedMin:-1.2,
-          suggestedMax:1.2,
-          grid:{color:'rgba(0,0,0,0.06)'},
-          title:{display:true,text:'Normalized amplitude'}
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enhanced RLC Circuit Simulator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg1: #16356f;
+      --bg2: #234f9a;
+      --card: rgba(255, 255, 255, 0.12);
+      --card-strong: rgba(8, 22, 54, 0.40);
+      --ink: #eef4ff;
+      --muted: #bfd0f5;
+      --accent: #78c4ff;
+      --accent2: #9de0c7;
+      --edge: rgba(255, 255, 255, 0.14);
+      --shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.10), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.06), transparent 24%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: min(1280px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 22px 0 28px;
+    }
+
+    .hero {
+      margin-bottom: 18px;
+      padding: 18px 22px;
+      border: 1px solid var(--edge);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+      backdrop-filter: blur(6px);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(28px, 3vw, 42px);
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--edge);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--edge);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+
+    .controls-panel {
+      padding: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .control-card {
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .control-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .control-name {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .value-badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .minmax {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .minmax label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    input[type="number"] {
+      margin-top: 5px;
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #162646;
+      font-size: 14px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #4db6ff;
+      cursor: pointer;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px)
+    }
+
+    button:active {
+      transform: translateY(0)
+    }
+
+    .btn-primary {
+      color: #0f2546;
+      background: linear-gradient(180deg, #b5e2ff, #7dc7ff);
+    }
+
+    .btn-secondary {
+      color: #eff6ff;
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .right-col {
+      display: grid;
+      gap: 18px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      padding: 14px;
+      border-radius: 18px;
+      background: var(--card);
+      border: 1px solid var(--edge);
+      box-shadow: var(--shadow);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+      letter-spacing: .25px;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.05;
+    }
+
+    .metric-sub {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .plot-grid {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .plot-card {
+      padding: 14px;
+    }
+
+    .plot-title {
+      margin: 0 0 10px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .plot-note {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .canvas-shell {
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 10px;
+      min-width: 0;
+    }
+
+    #phasor {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 340px;
+      background: #fff;
+      border-radius: 12px;
+    }
+
+    .wave-wrap {
+      width: 100%;
+      height: 390px;
+      min-width: 0;
+    }
+
+    #wave {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      background: #fff;
+      border-radius: 12px;
+    }
+
+    .explain {
+      padding: 16px;
+      line-height: 1.55;
+    }
+
+    .explain-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .info-chip {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    .info-chip b {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      margin-top: 18px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1120px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+      }
+
+      .plot-grid {
+        grid-template-columns: 1fr
+      }
+
+      #phasor {
+        max-width: 100%
       }
     }
-  });
-}
 
-function update(){
-  clampSlider(els.Rslider, els.Rmin, els.Rmax, 0.0001);
-  clampSlider(els.Lslider, els.Lmin, els.Lmax, 0);
-  clampSlider(els.Cslider, els.Cmin, els.Cmax, 0.0000001);
-  clampSlider(els.fslider, els.fmin, els.fmax, 0);
-
-  const R = Math.max(+els.Rslider.value, 0.0001);
-  const L = Math.max(+els.Lslider.value, 0);
-  const C = Math.max(+els.Cslider.value, 0.0000001);
-  const f = Math.max(+els.fslider.value, 0);
-
-  const omega = 2 * Math.PI * f;
-  const XL = (f === 0) ? 0 : omega * L;
-  const XC = (f === 0) ? Infinity : 1 / (omega * C);
-  const reactance = (f === 0) ? 0 : (XL - XC);
-  const Z = (f === 0) ? R : Math.sqrt(R*R + reactance*reactance);
-  const Iamp = 1 / Z;
-  const phi = (f === 0) ? 0 : Math.atan(reactance / R);
-  const phaseDeg = phi * 180 / Math.PI;
-  const pf = Math.abs(Math.cos(phi));
-  const f0 = (L > 0 && C > 0) ? 1 / (2 * Math.PI * Math.sqrt(L*C)) : 0;
-
-  let mode = "Resistive";
-  let phaseText = "Current in phase with voltage";
-  let summary = "At resonance the circuit behaves almost purely resistive, so voltage and current align closely.";
-
-  if(f === 0){
-    mode = "DC case";
-    phaseText = "No AC phase shift";
-    summary = "At zero frequency, the circuit is treated as a DC case. The capacitor blocks steady-state current while the inductor behaves like a short in idealized analysis, but this visualization uses the simplified series expression for continuity.";
-  } else if(Math.abs(reactance) < 1e-6 || Math.abs(phaseDeg) < 0.2){
-    mode = "Near resonance";
-    phaseText = "Current nearly in phase with voltage";
-    summary = "You are very close to resonance. Inductive and capacitive reactances nearly cancel, making impedance approach the resistance value.";
-  } else if(reactance > 0){
-    mode = "Inductive region";
-    phaseText = "Current lags voltage";
-    summary = "The circuit is inductive because XL is greater than XC. Increasing frequency or inductance pushes the current further behind the voltage.";
-  } else {
-    mode = "Capacitive region";
-    phaseText = "Current leads voltage";
-    summary = "The circuit is capacitive because XC is greater than XL. Lower frequency or larger capacitance strengthens the leading current behavior.";
-  }
-
-  els.RValue.textContent = `${nice(R,2)} Ω`;
-  els.LValue.textContent = `${nice(L,3)} H`;
-  els.CValue.textContent = `${nice(C,5)} F`;
-  els.fValue.textContent = `${nice(f,2)} Hz`;
-
-  els.ZValue.textContent = `${nice(Z,2)} Ω`;
-  els.PhaseValue.textContent = `${nice(phaseDeg,2)}°`;
-  els.PhaseText.textContent = phaseText;
-  els.f0Value.textContent = `${nice(f0,2)} Hz`;
-  els.pfValue.textContent = nice(pf,3);
-  els.ModeText.textContent = mode;
-  els.summaryText.textContent = summary;
-
-  drawPhasor(phi, R, XL, XC === Infinity ? 0 : XC, Z);
-
-  const totalTime = (f > 0) ? Math.max(4/f, 0.08) : 0.12;
-  const sampleCount = 700;
-  const labels = [];
-  const voltage = [];
-  const current = [];
-
-  for(let i=0;i<sampleCount;i++){
-    const t = i * totalTime / (sampleCount - 1);
-    labels.push(t.toFixed(4));
-    if(f === 0){
-      voltage.push(1);
-      current.push(Iamp);
-    } else {
-      voltage.push(Math.sin(omega * t));
-      current.push(Iamp * Math.sin(omega * t - phi));
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr
+      }
     }
-  }
 
-  if(chart) chart.destroy();
-  chart = createWaveChart(labels, voltage, current);
-}
+    @media (max-width: 640px) {
+      .quick-actions {
+        grid-template-columns: 1fr
+      }
 
-function setDefaults(){
-  els.Rmin.value = 1; els.Rmax.value = 500; els.Rslider.value = 100;
-  els.Lmin.value = 0; els.Lmax.value = 2; els.Lslider.value = 0.5;
-  els.Cmin.value = 0.00001; els.Cmax.value = 0.01; els.Cslider.value = 0.00101;
-  els.fmin.value = 0; els.fmax.value = 200; els.fslider.value = 50;
-  update();
-}
+      .metrics-grid {
+        grid-template-columns: 1fr
+      }
 
-els.presetResonance.addEventListener('click', () => {
-  const L = Math.max(+els.Lslider.value, 0.01);
-  const C = Math.max(+els.Cslider.value, 0.0000001);
-  const f0 = 1 / (2 * Math.PI * Math.sqrt(L*C));
-  const maxF = Math.max(+els.fmax.value, f0 * 1.25);
-  els.fmax.value = maxF.toFixed(2);
-  els.fslider.max = els.fmax.value;
-  els.fslider.value = f0.toFixed(2);
-  update();
-});
+      .explain-grid {
+        grid-template-columns: 1fr
+      }
 
-els.presetLowFreq.addEventListener('click', () => {
-  els.fslider.value = Math.max(+els.fslider.min, 5);
-  update();
-});
+      .container {
+        width: min(100vw - 20px, 1280px)
+      }
+    }
+  </style>
+</head>
 
-els.resetAll.addEventListener('click', setDefaults);
+<body>
+  <div class="container">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>RLC Circuit Simulator</h1>
+          <p class="subtitle">
+            Explore how resistance, inductance, capacitance, and frequency affect impedance, phase shift, resonance, and
+            the relationship between voltage and current.
+          </p>
+          <div class="pill-row">
+            <div class="pill">Interactive controls</div>
+            <div class="pill">Phasor view</div>
+            <div class="pill">Waveform view</div>
+            <div class="pill">Resonance insights</div>
+          </div>
+        </div>
+        <div class="pill">Series RLC • AC analysis</div>
+      </div>
+    </section>
 
-[
-  els.Rslider, els.Lslider, els.Cslider, els.fslider,
-  els.Rmin, els.Rmax, els.Lmin, els.Lmax,
-  els.Cmin, els.Cmax, els.fmin, els.fmax
-].forEach(el => el.addEventListener('input', update));
+    <section class="main-grid">
+      <aside class="card controls-panel">
+        <h2 class="section-title">Circuit Controls</h2>
+        <div class="controls-grid">
 
-setDefaults();
-</script>
+          <div class="control-card">
+            <div class="control-head">
+              <div class="control-name">Resistance (R)</div>
+              <div class="value-badge" id="RValue">100.00 Ω</div>
+            </div>
+            <div class="minmax">
+              <label>R min<input type="number" id="Rmin" value="1" step="0.1"></label>
+              <label>R max<input type="number" id="Rmax" value="500" step="0.1"></label>
+            </div>
+            <input type="range" id="R" min="1" max="500" value="100" step="0.1">
+          </div>
+
+          <div class="control-card">
+            <div class="control-head">
+              <div class="control-name">Inductance (L)</div>
+              <div class="value-badge" id="LValue">0.500 H</div>
+            </div>
+            <div class="minmax">
+              <label>L min<input type="number" id="Lmin" value="0" step="0.01"></label>
+              <label>L max<input type="number" id="Lmax" value="2" step="0.01"></label>
+            </div>
+            <input type="range" id="L" min="0" max="2" value="0.5" step="0.01">
+          </div>
+
+          <div class="control-card">
+            <div class="control-head">
+              <div class="control-name">Capacitance (C)</div>
+              <div class="value-badge" id="CValue">0.00101 F</div>
+            </div>
+            <div class="minmax">
+              <label>C min<input type="number" id="Cmin" value="0.00001" step="0.00001"></label>
+              <label>C max<input type="number" id="Cmax" value="0.01" step="0.00001"></label>
+            </div>
+            <input type="range" id="C" min="0.00001" max="0.01" value="0.00101" step="0.00001">
+          </div>
+
+          <div class="control-card">
+            <div class="control-head">
+              <div class="control-name">Frequency (f)</div>
+              <div class="value-badge" id="fValue">50.00 Hz</div>
+            </div>
+            <div class="minmax">
+              <label>f min<input type="number" id="fmin" value="0" step="1"></label>
+              <label>f max<input type="number" id="fmax" value="200" step="1"></label>
+            </div>
+            <input type="range" id="f" min="0" max="200" value="50" step="1">
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="btn-primary" id="presetResonance">Set Near Resonance</button>
+          <button class="btn-secondary" id="presetLowFreq">Low Frequency</button>
+          <button class="btn-secondary" id="resetAll">Reset Defaults</button>
+        </div>
+      </aside>
+
+      <div class="right-col">
+        <section class="metrics-grid">
+          <div class="metric">
+            <div class="metric-label">Impedance</div>
+            <div class="metric-value" id="ZValue">183.56 Ω</div>
+            <div class="metric-sub">Overall opposition to AC</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Phase Shift</div>
+            <div class="metric-value" id="PhaseValue">56.99°</div>
+            <div class="metric-sub" id="PhaseText">Current lags voltage</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Resonant Frequency</div>
+            <div class="metric-value" id="f0Value">7.09 Hz</div>
+            <div class="metric-sub">Where XL = XC</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Power Factor</div>
+            <div class="metric-value" id="pfValue">0.545</div>
+            <div class="metric-sub" id="ModeText">Inductive region</div>
+          </div>
+        </section>
+
+        <section class="plot-grid">
+          <div class="card plot-card">
+            <h3 class="plot-title">Phasor Diagram</h3>
+            <p class="plot-note">Blue: resistive axis, green: reactance triangle, red: impedance phasor.</p>
+            <div class="canvas-shell">
+              <canvas id="phasor" width="340" height="340"></canvas>
+            </div>
+          </div>
+
+          <div class="card plot-card">
+            <h3 class="plot-title">Voltage and Current Waves</h3>
+            <p class="plot-note">Observe the lead or lag between voltage and current as you change component values and
+              frequency.</p>
+            <div class="canvas-shell">
+              <div class="wave-wrap">
+                <canvas id="wave"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card explain">
+          <h3 class="plot-title">What this simulator shows</h3>
+          <div id="summaryText">
+            Increase inductance or frequency to raise inductive reactance. Increase capacitance or lower frequency to
+            strengthen capacitive behavior.
+          </div>
+          <div class="explain-grid">
+            <div class="info-chip"><b>Inductive</b><span>XL > XC, so current lags voltage.</span></div>
+            <div class="info-chip"><b>Resonance</b><span>XL = XC, so impedance is minimum and phase shift is near
+                zero.</span></div>
+            <div class="info-chip"><b>Capacitive</b><span>XC > XL, so current leads voltage.</span></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <footer>Authored By: Ashutosh Rana</footer>
+  </div>
+
+  <script>
+    const waveCtx = document.getElementById('wave').getContext('2d');
+    const phasorCanvas = document.getElementById('phasor');
+    const pctx = phasorCanvas.getContext('2d');
+    let chart;
+
+    const els = {
+      Rslider: document.getElementById('R'),
+      Lslider: document.getElementById('L'),
+      Cslider: document.getElementById('C'),
+      fslider: document.getElementById('f'),
+      Rmin: document.getElementById('Rmin'),
+      Rmax: document.getElementById('Rmax'),
+      Lmin: document.getElementById('Lmin'),
+      Lmax: document.getElementById('Lmax'),
+      Cmin: document.getElementById('Cmin'),
+      Cmax: document.getElementById('Cmax'),
+      fmin: document.getElementById('fmin'),
+      fmax: document.getElementById('fmax'),
+      RValue: document.getElementById('RValue'),
+      LValue: document.getElementById('LValue'),
+      CValue: document.getElementById('CValue'),
+      fValue: document.getElementById('fValue'),
+      ZValue: document.getElementById('ZValue'),
+      PhaseValue: document.getElementById('PhaseValue'),
+      PhaseText: document.getElementById('PhaseText'),
+      f0Value: document.getElementById('f0Value'),
+      pfValue: document.getElementById('pfValue'),
+      ModeText: document.getElementById('ModeText'),
+      summaryText: document.getElementById('summaryText'),
+      presetResonance: document.getElementById('presetResonance'),
+      presetLowFreq: document.getElementById('presetLowFreq'),
+      resetAll: document.getElementById('resetAll')
+    };
+
+    function clampSlider(slider, minInput, maxInput, floorValue) {
+      minInput.value = Math.max(+minInput.value, floorValue);
+      maxInput.value = Math.max(+maxInput.value, +minInput.value);
+      slider.min = minInput.value;
+      slider.max = maxInput.value;
+      if (+slider.value < +slider.min) slider.value = slider.min;
+      if (+slider.value > +slider.max) slider.value = slider.max;
+    }
+
+    function nice(value, digits = 2) {
+      if (!isFinite(value)) return "∞";
+      return Number(value).toFixed(digits);
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, width = 3) {
+      const headLength = 10;
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+
+      pctx.strokeStyle = color;
+      pctx.lineWidth = width;
+      pctx.beginPath();
+      pctx.moveTo(x1, y1);
+      pctx.lineTo(x2, y2);
+      pctx.stroke();
+
+      pctx.beginPath();
+      pctx.moveTo(x2, y2);
+      pctx.lineTo(x2 - headLength * Math.cos(angle - Math.PI / 6), y2 - headLength * Math.sin(angle - Math.PI / 6));
+      pctx.lineTo(x2 - headLength * Math.cos(angle + Math.PI / 6), y2 - headLength * Math.sin(angle + Math.PI / 6));
+      pctx.closePath();
+      pctx.fillStyle = color;
+      pctx.fill();
+    }
+
+    function drawPhasor(phi, R, XL, XC, Z) {
+      const w = phasorCanvas.width;
+      const h = phasorCanvas.height;
+      const cx = w / 2, cy = h / 2;
+      const reactance = XL - XC;
+      const maxMagnitude = Math.max(Math.abs(R), Math.abs(reactance), Z, 1);
+      const scale = 105 / maxMagnitude;
+
+      pctx.clearRect(0, 0, w, h);
+
+      pctx.fillStyle = "#ffffff";
+      pctx.fillRect(0, 0, w, h);
+
+      pctx.strokeStyle = "#d7deeb";
+      pctx.lineWidth = 1;
+      for (let i = 40; i < w; i += 40) {
+        pctx.beginPath(); pctx.moveTo(i, 0); pctx.lineTo(i, h); pctx.stroke();
+      }
+      for (let i = 40; i < h; i += 40) {
+        pctx.beginPath(); pctx.moveTo(0, i); pctx.lineTo(w, i); pctx.stroke();
+      }
+
+      pctx.strokeStyle = "#8b95a7";
+      pctx.lineWidth = 1.2;
+      pctx.beginPath(); pctx.moveTo(0, cy); pctx.lineTo(w, cy); pctx.stroke();
+      pctx.beginPath(); pctx.moveTo(cx, 0); pctx.lineTo(cx, h); pctx.stroke();
+
+      pctx.fillStyle = "#23304f";
+      pctx.font = "12px Segoe UI";
+      pctx.fillText("Re", w - 24, cy - 8);
+      pctx.fillText("Im", cx + 8, 16);
+
+      const x = R * scale;
+      const y = reactance * scale;
+
+      drawArrow(cx, cy, cx + x, cy, "#2563eb", 3);
+      drawArrow(cx + x, cy, cx + x, cy - y, "#16a34a", 3);
+      drawArrow(cx, cy, cx + x, cy - y, "#dc2626", 3);
+
+      pctx.fillStyle = "#1f2b45";
+      pctx.fillText("R", cx + x / 2 + 4, cy - 8);
+      pctx.fillText(reactance >= 0 ? "XL-XC" : "XC-XL", cx + x + 6, cy - y / 2);
+      pctx.fillText("Z", cx + x / 2 + 8, cy - y / 2 - 6);
+
+      pctx.strokeStyle = "#6b7280";
+      pctx.setLineDash([5, 5]);
+      pctx.beginPath();
+      pctx.moveTo(cx + x, cy - y);
+      pctx.lineTo(cx + x, cy);
+      pctx.stroke();
+      pctx.setLineDash([]);
+    }
+
+    function createWaveChart(labels, voltage, current) {
+      return new Chart(waveCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Voltage',
+              data: voltage,
+              borderColor: '#2f9cff',
+              borderWidth: 2.2,
+              pointRadius: 0,
+              tension: 0,
+            },
+            {
+              label: 'Current',
+              data: current,
+              borderColor: '#ff5f8a',
+              borderWidth: 2.2,
+              pointRadius: 0,
+              tension: 0,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { usePointStyle: true, boxWidth: 10 }
+            },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            x: {
+              ticks: { maxTicksLimit: 12 },
+              grid: { color: 'rgba(0,0,0,0.06)' },
+              title: { display: true, text: 'Time (s)' }
+            },
+            y: {
+              suggestedMin: -1.2,
+              suggestedMax: 1.2,
+              grid: { color: 'rgba(0,0,0,0.06)' },
+              title: { display: true, text: 'Normalized amplitude' }
+            }
+          }
+        }
+      });
+    }
+
+    function update() {
+      clampSlider(els.Rslider, els.Rmin, els.Rmax, 0.0001);
+      clampSlider(els.Lslider, els.Lmin, els.Lmax, 0);
+      clampSlider(els.Cslider, els.Cmin, els.Cmax, 0.0000001);
+      clampSlider(els.fslider, els.fmin, els.fmax, 0);
+
+      const R = Math.max(+els.Rslider.value, 0.0001);
+      const L = Math.max(+els.Lslider.value, 0);
+      const C = Math.max(+els.Cslider.value, 0.0000001);
+      const f = Math.max(+els.fslider.value, 0);
+
+      const omega = 2 * Math.PI * f;
+      const XL = (f === 0) ? 0 : omega * L;
+      const XC = (f === 0) ? Infinity : 1 / (omega * C);
+      const reactance = (f === 0) ? 0 : (XL - XC);
+      const Z = (f === 0) ? R : Math.sqrt(R * R + reactance * reactance);
+      const Iamp = 1 / Z;
+      const phi = (f === 0) ? 0 : Math.atan(reactance / R);
+      const phaseDeg = phi * 180 / Math.PI;
+      const pf = Math.abs(Math.cos(phi));
+      const f0 = (L > 0 && C > 0) ? 1 / (2 * Math.PI * Math.sqrt(L * C)) : 0;
+
+      let mode = "Resistive";
+      let phaseText = "Current in phase with voltage";
+      let summary = "At resonance the circuit behaves almost purely resistive, so voltage and current align closely.";
+
+      if (f === 0) {
+        mode = "DC case";
+        phaseText = "No AC phase shift";
+        summary = "At zero frequency, the circuit is treated as a DC case. The capacitor blocks steady-state current while the inductor behaves like a short in idealized analysis, but this visualization uses the simplified series expression for continuity.";
+      } else if (Math.abs(reactance) < 1e-6 || Math.abs(phaseDeg) < 0.2) {
+        mode = "Near resonance";
+        phaseText = "Current nearly in phase with voltage";
+        summary = "You are very close to resonance. Inductive and capacitive reactances nearly cancel, making impedance approach the resistance value.";
+      } else if (reactance > 0) {
+        mode = "Inductive region";
+        phaseText = "Current lags voltage";
+        summary = "The circuit is inductive because XL is greater than XC. Increasing frequency or inductance pushes the current further behind the voltage.";
+      } else {
+        mode = "Capacitive region";
+        phaseText = "Current leads voltage";
+        summary = "The circuit is capacitive because XC is greater than XL. Lower frequency or larger capacitance strengthens the leading current behavior.";
+      }
+
+      els.RValue.textContent = `${nice(R, 2)} Ω`;
+      els.LValue.textContent = `${nice(L, 3)} H`;
+      els.CValue.textContent = `${nice(C, 5)} F`;
+      els.fValue.textContent = `${nice(f, 2)} Hz`;
+
+      els.ZValue.textContent = `${nice(Z, 2)} Ω`;
+      els.PhaseValue.textContent = `${nice(phaseDeg, 2)}°`;
+      els.PhaseText.textContent = phaseText;
+      els.f0Value.textContent = `${nice(f0, 2)} Hz`;
+      els.pfValue.textContent = nice(pf, 3);
+      els.ModeText.textContent = mode;
+      els.summaryText.textContent = summary;
+
+      drawPhasor(phi, R, XL, XC === Infinity ? 0 : XC, Z);
+
+      const totalTime = (f > 0) ? Math.max(4 / f, 0.08) : 0.12;
+      const sampleCount = 700;
+      const labels = [];
+      const voltage = [];
+      const current = [];
+
+      for (let i = 0; i < sampleCount; i++) {
+        const t = i * totalTime / (sampleCount - 1);
+        labels.push(t.toFixed(4));
+        if (f === 0) {
+          voltage.push(1);
+          current.push(Iamp);
+        } else {
+          voltage.push(Math.sin(omega * t));
+          current.push(Iamp * Math.sin(omega * t - phi));
+        }
+      }
+
+      if (chart) chart.destroy();
+      chart = createWaveChart(labels, voltage, current);
+    }
+
+    function setDefaults() {
+      els.Rmin.value = 1; els.Rmax.value = 500; els.Rslider.value = 100;
+      els.Lmin.value = 0; els.Lmax.value = 2; els.Lslider.value = 0.5;
+      els.Cmin.value = 0.00001; els.Cmax.value = 0.01; els.Cslider.value = 0.00101;
+      els.fmin.value = 0; els.fmax.value = 200; els.fslider.value = 50;
+      update();
+    }
+
+    els.presetResonance.addEventListener('click', () => {
+      const L = Math.max(+els.Lslider.value, 0.01);
+      const C = Math.max(+els.Cslider.value, 0.0000001);
+      const f0 = 1 / (2 * Math.PI * Math.sqrt(L * C));
+      const maxF = Math.max(+els.fmax.value, f0 * 1.25);
+      els.fmax.value = maxF.toFixed(2);
+      els.fslider.max = els.fmax.value;
+      els.fslider.value = f0.toFixed(2);
+      update();
+    });
+
+    els.presetLowFreq.addEventListener('click', () => {
+      els.fslider.value = Math.max(+els.fslider.min, 5);
+      update();
+    });
+
+    els.resetAll.addEventListener('click', setDefaults);
+
+    [
+      els.Rslider, els.Lslider, els.Cslider, els.fslider,
+      els.Rmin, els.Rmax, els.Lmin, els.Lmax,
+      els.Cmin, els.Cmax, els.fmin, els.fmax
+    ].forEach(el => el.addEventListener('input', update));
+
+    setDefaults();
+  </script>
 </body>
+
 </html>
