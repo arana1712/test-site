@@ -4,7 +4,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Enhanced RLC Circuit Simulator</title>
+  <title>RLC Circuit Simulator • Phasor &amp; Waveform Lab</title>
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="%2378c4ff"/>
+          <stop offset="100%" stop-color="%239de0c7"/>
+        </linearGradient>
+      </defs>
+      <rect x="6" y="6" width="52" height="52" rx="14" fill="%230d1f45"/>
+      <path d="M14 34h8l5-12 9 24 5-12h9" fill="none" stroke="url(%23g)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="14" cy="34" r="2.8" fill="%2378c4ff"/>
+      <circle cx="50" cy="34" r="2.8" fill="%239de0c7"/>
+    </svg>'>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -386,12 +399,35 @@
   <div class="container">
     <section class="hero">
       <div class="hero-top">
-        <div>
-          <h1>RLC Circuit Simulator</h1>
-          <p class="subtitle">
-            Explore how resistance, inductance, capacitance, and frequency affect impedance, phase shift, resonance, and
-            the relationship between voltage and current.
-          </p>
+        <div class="brand-block">
+          <div class="brand-row">
+            <div class="brand-logo" aria-hidden="true">
+              <svg viewBox="0 0 64 64" width="54" height="54">
+                <defs>
+                  <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#78c4ff" />
+                    <stop offset="100%" stop-color="#9de0c7" />
+                  </linearGradient>
+                </defs>
+                <rect x="4" y="4" width="56" height="56" rx="16" fill="#0e2148" />
+                <path d="M14 34h8l5-12 9 24 5-12h9" fill="none" stroke="url(#brandGrad)" stroke-width="4"
+                  stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="14" cy="34" r="2.8" fill="#78c4ff" />
+                <circle cx="50" cy="34" r="2.8" fill="#9de0c7" />
+              </svg>
+            </div>
+
+            <div>
+              <div class="brand-kicker">Interactive Electrical Lab</div>
+              <h1>RLC Circuit Simulator</h1>
+              <p class="subtitle">
+                Explore how resistance, inductance, capacitance, and frequency affect impedance, phase shift, resonance,
+                and
+                the relationship between voltage and current.
+              </p>
+            </div>
+          </div>
+
           <div class="pill-row">
             <div class="pill">Interactive controls</div>
             <div class="pill">Phasor view</div>
