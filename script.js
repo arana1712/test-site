@@ -1,6 +1,7 @@
 const cake = document.getElementById("cake");
 const candles = document.querySelector(".candles");
 const lightCandlesBtn = document.getElementById("lightCandlesBtn");
+const blowCandlesBtn = document.getElementById("blowCandlesBtn");
 const cutCakeBtn = document.getElementById("cutCakeBtn");
 const statusMessage = document.getElementById("statusMessage");
 const confetti = document.getElementById("confetti");
@@ -14,6 +15,11 @@ lightCandlesBtn.addEventListener("click", () => {
   launchConfetti(42);
 
   setTimeout(() => cake.classList.remove("celebrate"), 850);
+});
+
+blowCandlesBtn.addEventListener("click", () => {
+  candles.classList.remove("candles-lit");
+  statusMessage.textContent = "The candles are out. Wish made! 💖";
 });
 
 cutCakeBtn.addEventListener("click", () => {
